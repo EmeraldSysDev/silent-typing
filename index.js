@@ -1,14 +1,22 @@
 const { Plugin } = require("powercord/entities");
 const { typing } = require("powercord/webpack");
 
+const Settings = require("./components/Settings");
+
 module.exports = class SilentTyping extends Plugin {
     startPlugin() {
+        powercord.api.settings.registerSettings(this.entityID, {
+            category: this.entityID,
+            label: "Silent Typing",
+            render: Settings
+        });
         powercord.api.commands.registerCommand({
             command: "togglesilent",
             description: "Toggles silent typing",
             usage: "{c}",
             executor: this.toggle.bind(this)
         });
+
         this.hookTyping = typing.startTyping;
         if (this.settings.get("enabled", false)) {
             typing.startTyping = () => {};
@@ -39,5 +47,7 @@ module.exports = class SilentTyping extends Plugin {
 
     pluginWillUnload() {
         typing.startTyping = this.hookTyping;
+        powercord.api.commands.unregisterCommand("togglesilent");
+        powercord.api.settings.unregisterSettings(this.entityID);
     }
 };
